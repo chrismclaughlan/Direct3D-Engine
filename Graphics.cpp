@@ -4,12 +4,19 @@
 #include <d3dcompiler.h>
 #include <array>
 #include <DirectXMath.h>
+#include <sstream>
 
 #pragma comment(lib, "D3D11.lib")
 #pragma comment(lib, "D3DCompiler.lib")
 
 namespace wrl = Microsoft::WRL;
 namespace dx = DirectX;
+
+#define ALEXIS_THROW_EXCEPTION(hResult)\
+if ((int32)(hResult) != 0)\
+{\
+	throw Graphics::Exception(__LINE__, __FILE__, hResult);\
+}\
 
 Graphics::Graphics(HWND hwnd)
 {
@@ -80,12 +87,18 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 {
 	struct Vertex
 	{
-		float x;
-		float y;
-		uint8 r;
-		uint8 g;
-		uint8 b;
-		uint8 a;
+		struct
+		{
+			float x;
+			float y;
+			//float z;
+		} pos;
+		struct {
+			uint8 r;
+			uint8 g;
+			uint8 b;
+			uint8 a;
+		} colour;
 	};
 
 	// Create triangle
@@ -107,9 +120,8 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	D3D11_SUBRESOURCE_DATA sd = {};
 	sd.pSysMem = vertices;
 
-	// TODO error handling
 	HRESULT hResult;
-	pDevice->CreateBuffer(&bd, &sd, &pVertexBuffer);
+	ALEXIS_THROW_EXCEPTION(pDevice->CreateBuffer(&bd, &sd, &pVertexBuffer));
 
 	// Bind vertex buffer to pipeline
 	const UINT stride = sizeof(Vertex);
@@ -120,8 +132,6 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	{
 		dx::XMMATRIX transform;
 	};
-	// https://www.youtube.com/watch?v=VELCxc0fmwY
-	// 05:11
 	const ConstantBuffer cb =
 	{
 		{
@@ -142,8 +152,7 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	cbd.StructureByteStride = 0u;
 	D3D11_SUBRESOURCE_DATA csd = {};
 	csd.pSysMem = &cb;
-	// TODO GFX_THROW_INFO
-	pDevice->CreateBuffer(&cbd, &csd, &pConstantBuffer);
+	ALEXIS_THROW_EXCEPTION(pDevice->CreateBuffer(&cbd, &csd, &pConstantBuffer));
 
 	// Bind constant buffer to vertex shader
 	pContext->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
@@ -152,13 +161,8 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 
 	// Create pixel shader
 	wrl::ComPtr<ID3D11PixelShader> pPixelShader;
-	// TODO error handling
-	/*
-	https://www.youtube.com/watch?v=KR8bP0G07fc
-	03:00
-	*/
-	D3DReadFileToBlob(L"PixelShader.cso", &pBlob);
-	pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pPixelShader);
+	ALEXIS_THROW_EXCEPTION(D3DReadFileToBlob(L"PixelShader.cso", &pBlob));
+	ALEXIS_THROW_EXCEPTION(pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pPixelShader));
 
 	// Bind pixel shader
 	pContext->PSSetShader(pPixelShader.Get(), nullptr, 0u);
@@ -167,19 +171,13 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	wrl::ComPtr<ID3D11VertexShader> pVertexShader;
 	//D3DReadFileToBlob(L"VertexShader.cso", &pBlob);
 
-	// TODO error handling
-	/*
-	https://www.youtube.com/watch?v=pfbWt1BnPIo
-	27:00
-	*/
-	D3DReadFileToBlob(L"VertexShader.cso", &pBlob);
-	pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pVertexShader);
+	ALEXIS_THROW_EXCEPTION(D3DReadFileToBlob(L"VertexShader.cso", &pBlob));
+	ALEXIS_THROW_EXCEPTION(pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pVertexShader));
 
 	// Bind vertex shader
 	pContext->VSSetShader(pVertexShader.Get(), nullptr, 0u);
 
-
-	// input ...
+	//
 	wrl::ComPtr<ID3D11InputLayout> pInputLayout;
 	const D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
@@ -189,26 +187,15 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 		D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 
-	// TODO error handling
-	/*
-	https://www.youtube.com/watch?v=KR8bP0G07fc
-	20:00
-	*/
-
-	pDevice->CreateInputLayout(
-		ied, (UINT)std::size(ied),
-		pBlob->GetBufferPointer(), pBlob->GetBufferSize(),
-		&pInputLayout
-		);
-
+	ALEXIS_THROW_EXCEPTION(pDevice->CreateInputLayout(ied, (UINT)std::size(ied), pBlob->GetBufferPointer(), pBlob->GetBufferSize(), &pInputLayout));
+	
 	pContext->IASetInputLayout(pInputLayout.Get());
 	
 	// Bind render target
 	pContext->OMSetRenderTargets(1u, pTarget.GetAddressOf(), nullptr);  // pTarget.GetAddressOf()
 
 	// Set primitive topology
-	pContext->IASetPrimitiveTopology(
-		D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// Configure viewport
 	D3D11_VIEWPORT vp;
@@ -225,6 +212,57 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	https://www.youtube.com/watch?v=pfbWt1BnPIo
 	18:00
 	*/
-
 	pContext->Draw((UINT)std::size(vertices), 0u);
+}
+
+/**//******************** EXCEPTIONS ********************/
+
+Graphics::Exception::Exception(int32 line, const char* file, HRESULT hResult)
+	: AlexisException(line, file), hResult(hResult) {}
+
+const char* Graphics::Exception::what() const noexcept
+{
+	std::ostringstream oss;
+	oss << GetType() << std::endl
+		<< "[Error code] " << GetErrorCode() << std::endl
+		<< "[Description] " << GetErrorString() << std::endl
+		<< GetOriginString();
+	whatBuffer = oss.str();
+	return whatBuffer.c_str();
+}
+
+const char* Graphics::Exception::GetType() const noexcept
+{
+	return "Alexis Graphics Exception";
+}
+
+std::string Graphics::Exception::TranslateErrorCode(HRESULT hResult) noexcept
+{
+	wchar_t* pMsgBuf = nullptr;
+	DWORD nMsgLen = FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, hResult, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		reinterpret_cast<LPWSTR>(&pMsgBuf), 0, nullptr);  // originally LPSTR
+	if (nMsgLen == 0)
+	{
+		return "Unidentified error code";
+	}
+
+	// wchar_t to string
+	std::wstring ws(pMsgBuf);
+	std::string errorString(ws.begin(), ws.end());
+
+	LocalFree(pMsgBuf);
+	return errorString;
+}
+
+HRESULT Graphics::Exception::GetErrorCode() const noexcept
+{
+	return hResult;
+}
+
+std::string Graphics::Exception::GetErrorString() const noexcept
+{
+	return TranslateErrorCode(hResult);
 }

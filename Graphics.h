@@ -1,10 +1,24 @@
 #pragma once
 #include "common_windows.h"
+#include "alexisException.h"
 #include <D3D11.h>
 #include <wrl/client.h>
 
 class Graphics
 {
+public:
+	class Exception : public AlexisException
+	{
+	public:
+		Exception(int32 line, const char* file, HRESULT hResult);
+		const char* what() const noexcept override;
+		virtual const char* GetType() const noexcept;
+		static std::string TranslateErrorCode(HRESULT hResult) noexcept;
+		HRESULT GetErrorCode() const noexcept;
+		std::string GetErrorString() const noexcept;
+	private:
+		HRESULT hResult;
+	};
 public:
 	Graphics(HWND hwnd);
 	Graphics(const Graphics&) = delete;
