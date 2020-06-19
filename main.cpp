@@ -59,6 +59,7 @@ int32 CALLBACK WinMain(
 			}
 
 			window.Gfx().ClearBuffer(0.5f, 0.5f, 1.0f);
+			window.Gfx().DrawTestTriangle();
 			window.Gfx().EndFrame();
 		}
 

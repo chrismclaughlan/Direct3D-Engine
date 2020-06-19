@@ -57,7 +57,7 @@ Window::Window(int32 width, int32 height, const wchar_t* name)
 	{
 		throw ALEXIS_LAST_EXCEPTION();
 	}
-	
+
 	hwnd = CreateWindow(
 		WindowClass::GetName(), name,
 		WINDOW_STYLE,

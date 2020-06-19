@@ -1,6 +1,9 @@
 #include "Graphics.h"
+#include <wrl/client.h>
 
 #pragma comment(lib, "D3D11.lib")
+
+namespace wrl = Microsoft::WRL;
 
 Graphics::Graphics(HWND hwnd)
 {
@@ -65,4 +68,48 @@ void Graphics::ClearBuffer(float r, float g, float b) noexcept
 {
 	const float colour[] = { r,  g, b, 1.0f };
 	pContext->ClearRenderTargetView(pTarget, colour);
+}
+
+void Graphics::DrawTestTriangle()
+{
+	struct Vertex
+	{
+		float x;
+		float y;
+	};
+
+	// Create triangle
+	const Vertex vertices[] =
+	{
+		{0.0f, 0.5f},
+		{0.5f, -0.5f},
+		{-0.5f, -0.5f},
+	};
+
+	wrl::ComPtr<ID3D11Buffer> pVertexBuffer;
+	D3D11_BUFFER_DESC bd = {};
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.CPUAccessFlags = 0u;
+	bd.MiscFlags = 0u;
+	bd.ByteWidth = sizeof(vertices);
+	bd.StructureByteStride = sizeof(Vertex);
+	D3D11_SUBRESOURCE_DATA sd = {};
+	sd.pSysMem = vertices;
+
+	// TODO error handling
+	HRESULT hResult;
+	pDevice->CreateBuffer(&bd, &sd, &pVertexBuffer);
+
+	// Bind vertex buffer to pipeline
+	const UINT stride = sizeof(Vertex);
+	const UINT offset = 0u;
+	pContext->IASetVertexBuffers(0u, 1u, &pVertexBuffer, &stride, &offset);
+	
+	// TODO error handling
+	/*
+	https://www.youtube.com/watch?v=pfbWt1BnPIo
+	18:00
+	*/
+	pContext->Draw(3u, 0u);
 }
