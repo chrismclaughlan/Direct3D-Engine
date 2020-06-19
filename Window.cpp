@@ -72,6 +72,7 @@ Window::Window(int32 width, int32 height, const wchar_t* name)
 	}
 
 	ShowWindow(hwnd, SW_SHOWDEFAULT);
+	pGraphics = std::make_unique<Graphics>(hwnd);
 }
 
 Window::~Window()
@@ -87,6 +88,11 @@ void Window::SetTitle(const char* name)
 		throw ALEXIS_LAST_EXCEPTION();
 	}
 	delete[] title;
+}
+
+Graphics& Window::Gfx()
+{
+	return *pGraphics;
 }
 
 LRESULT CALLBACK Window::HandleMsgSetup

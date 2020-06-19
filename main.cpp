@@ -23,6 +23,43 @@ int32 CALLBACK WinMain(
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+
+			// test
+			while (!window.mouse.IsEmpty())
+			{
+				const auto e = window.mouse.Read();
+				switch (e.GetType())
+				{
+				//case Mouse::Event::Type::Leave:
+				//{
+				//	window.SetTitle("Gone!");
+				//} break;
+				//case Mouse::Event::Type::Move:
+				//{
+				//	int32 intx = e.GetPosX();
+				//	int32 inty = e.GetPosY();
+				//	char str[40] = { 0 };
+				//	std::sprintf(str, "Mouse moved to: %d %d", intx, inty);
+				//	window.SetTitle(str);
+				//} break;
+				case Mouse::Event::Type::WheelDown:
+				{
+					mouseWheelValue += 1;
+				} break;
+				case Mouse::Event::Type::WheelUp:
+				{
+					mouseWheelValue -= 1;
+				} break;
+				}
+
+				char str[40] = { 0 };
+				std::sprintf(str, "MouseWheel: %d", mouseWheelValue);
+				window.SetTitle(str);
+
+			}
+
+			window.Gfx().ClearBuffer(0.5f, 0.5f, 1.0f);
+			window.Gfx().EndFrame();
 		}
 
 		if (gResult == -1)

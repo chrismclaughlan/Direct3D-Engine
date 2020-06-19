@@ -4,6 +4,9 @@
 #include "alexisException.h"
 #include "Keyboard.h"
 #include "Mouse.h"
+#include "Graphics.h"
+#include <memory>
+//#include <optional>
 
 #define ALEXIS_EXCEPTION(hResult) (Window::Exception(__LINE__, __FILE__, hResult))
 #define ALEXIS_LAST_EXCEPTION() (Window::Exception(__LINE__, __FILE__, GetLastError()))
@@ -44,6 +47,7 @@ public:
 	Window(const Window&) = delete;
 	Window& operator=(const Window&) = delete;
 	void SetTitle(const char* name);
+	Graphics& Gfx();
 private:
 	static LRESULT CALLBACK HandleMsgSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
 	static LRESULT CALLBACK HandleMsgThunk(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;
@@ -55,4 +59,6 @@ private:
 	int32 width;
 	int32 height;
 	HWND hwnd;
+	std::unique_ptr<Graphics> pGraphics;
+	//std::optional<Graphics> gfx;  // if using c++17
 };

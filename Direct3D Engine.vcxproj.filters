@@ -29,6 +29,9 @@
     <ClCompile Include="Mouse.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common_types.h">
@@ -53,6 +56,9 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="Mouse.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
