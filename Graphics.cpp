@@ -74,7 +74,7 @@ void Graphics::ClearBuffer(float r, float g, float b) noexcept
 	pContext->ClearRenderTargetView(pTarget.Get(), colour);
 }
 
-void Graphics::DrawTestTriangle()
+void Graphics::DrawTestTriangle(float angle)
 {
 	struct Vertex
 	{
@@ -113,6 +113,40 @@ void Graphics::DrawTestTriangle()
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
 	pContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
+
+	struct ConstantBuffer
+	{
+		struct
+		{
+			float element[4][4];
+		} transformation;
+	};
+	// https://www.youtube.com/watch?v=VELCxc0fmwY
+	// 05:11
+	const ConstantBuffer cb =
+	{
+		{
+			(3.0f/4.0f)*std::cos(angle),	std::sin(angle),	0.0f, 0.0f,
+			(3.0f/4.0f)*-std::sin(angle),	std::cos(angle),	0.0f, 0.0f,
+			0.0f,				0.0f,				1.0f, 0.0f,
+			0.0f,				0.0f,				0.0f, 1.0f,
+		}
+	};
+	wrl::ComPtr<ID3D11Buffer> pConstantBuffer;
+	D3D11_BUFFER_DESC cbd;
+	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbd.Usage = D3D11_USAGE_DYNAMIC;
+	cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbd.MiscFlags = 0u;
+	cbd.ByteWidth = sizeof(cb);
+	cbd.StructureByteStride = 0u;
+	D3D11_SUBRESOURCE_DATA csd = {};
+	csd.pSysMem = &cb;
+	// TODO GFX_THROW_INFO
+	pDevice->CreateBuffer(&cbd, &csd, &pConstantBuffer);
+
+	// Bind constant buffer to vertex shader
+	pContext->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
 
 	wrl::ComPtr<ID3DBlob> pBlob;
 

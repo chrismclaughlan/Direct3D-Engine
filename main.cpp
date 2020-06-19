@@ -14,6 +14,7 @@ int32 CALLBACK WinMain(
 	try
 	{
 		Window window(800, 600, L"Alexis Engine: Direct3D");
+		static float time = 0.0f;
 
 		MSG msg;
 		BOOL gResult;
@@ -59,7 +60,10 @@ int32 CALLBACK WinMain(
 			}
 
 			window.Gfx().ClearBuffer(0.5f, 0.5f, 1.0f);
-			window.Gfx().DrawTestTriangle();
+			time += 0.1f;
+			if (time >= 6.0f)
+				time = 0.0f;
+			window.Gfx().DrawTestTriangle(time);
 			window.Gfx().EndFrame();
 		}
 
