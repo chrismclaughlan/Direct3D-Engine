@@ -91,7 +91,7 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 		{
 			float x;
 			float y;
-			//float z;
+			float z;
 		} pos;
 		struct {
 			uint8 r;
@@ -102,12 +102,18 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	};
 
 	// Create triangle
-	const Vertex vertices[] =
+	Vertex vertices[] =
 	{
-		{0.0f, 0.5f, 255, 0, 0, 255},
-		{0.5f, -0.5f, 0, 255, 0, 255},
-		{-0.5f, -0.5f, 0, 0, 255, 255},
+		{-1.0f,	-1.0f,	-1.0f	, 255, 0, 0},
+		{1.0f,	-1.0f,	-1.0f	, 0, 255, 0},
+		{-1.0f,	1.0f,	-1.0f	, 0, 0, 255},
+		{1.0f,	1.0f,	-1.0f	, 255, 255, 0},
+		{-1.0f,	-1.0f,	1.0f	, 255, 0, 255},
+		{1.0f,	-1.0f,	1.0f	, 0, 255, 255},
+		{-1.0f,	1.0f,	1.0f	, 0, 0, 0},
+		{1.0f,	1.0f,	1.0f	, 255, 255, 255},
 	};
+	vertices[0].colour.g = 255;
 
 	wrl::ComPtr<ID3D11Buffer> pVertexBuffer;
 	D3D11_BUFFER_DESC bd = {};
@@ -119,14 +125,37 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	bd.StructureByteStride = sizeof(Vertex);
 	D3D11_SUBRESOURCE_DATA sd = {};
 	sd.pSysMem = vertices;
-
-	HRESULT hResult;
 	ALEXIS_THROW_EXCEPTION(pDevice->CreateBuffer(&bd, &sd, &pVertexBuffer));
 
 	// Bind vertex buffer to pipeline
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
 	pContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
+
+	// Create index buffer
+	const uint16 indices[] =
+	{
+		0,2,1, 2,3,1,
+		1,3,5, 3,7,5,
+		2,6,3, 3,6,7,
+		4,5,7, 4,7,6,
+		0,4,2, 2,4,6,
+		0,1,4, 1,5,4
+	};
+	wrl::ComPtr<ID3D11Buffer> pIndexBuffer;
+	D3D11_BUFFER_DESC ibd = {};
+	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibd.Usage = D3D11_USAGE_DEFAULT;
+	ibd.CPUAccessFlags = 0u;
+	ibd.MiscFlags = 0u;
+	ibd.ByteWidth = sizeof(indices);
+	ibd.StructureByteStride = sizeof(uint16);
+	D3D11_SUBRESOURCE_DATA isd = {};
+	isd.pSysMem = indices;
+	ALEXIS_THROW_EXCEPTION(pDevice->CreateBuffer(&ibd, &isd, &pIndexBuffer));
+
+	// Bind index buffer
+	pContext->IASetIndexBuffer(pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 
 	struct ConstantBuffer
 	{
@@ -137,8 +166,9 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 		{
 			dx::XMMatrixTranspose(
 				dx::XMMatrixRotationZ(angle) *
-				dx::XMMatrixScaling(3.0f / 4.0f, 1.0f, 1.0f) *
-				dx::XMMatrixTranslation(x, y, 0.0f)
+				dx::XMMatrixRotationX(angle) *
+				dx::XMMatrixTranslation(x, y, 4.0f) *
+				dx::XMMatrixPerspectiveLH(1.0f, 3.0f / 4.0f, 0.5f, 10.0f)
 				)
 		}
 	};
@@ -181,7 +211,7 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	wrl::ComPtr<ID3D11InputLayout> pInputLayout;
 	const D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
-		{"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0,
+		{"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
 		D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"Colour", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT,
 		D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -212,7 +242,7 @@ void Graphics::DrawTestTriangle(float angle, float x, float y)
 	https://www.youtube.com/watch?v=pfbWt1BnPIo
 	18:00
 	*/
-	pContext->Draw((UINT)std::size(vertices), 0u);
+	pContext->DrawIndexed((UINT)std::size(indices), 0u, 0u);
 }
 
 /**//******************** EXCEPTIONS ********************/

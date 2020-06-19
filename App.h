@@ -10,12 +10,32 @@ private:
 	{
 		wnd.Gfx().ClearBuffer(0.5f, 0.5f, 1.0f);
 		wnd.Gfx().DrawTestTriangle(
-			0.0f,
+			angle,
 			wnd.mouse.GetPosX() / 400.0f - 1.0f,
 			-wnd.mouse.GetPosY() / 300.0f + 1.0f
 			);
 		wnd.Gfx().EndFrame();
 	}
+	void HandleInput()
+	{
+		// while(!wnd.keyboard...
+		while (!wnd.mouse.IsEmpty())
+		{
+			const auto e = wnd.mouse.Read();
+			switch (e.GetType())
+			{
+			case Mouse::Event::Type::WheelDown:
+			{
+				angle += 0.1f;
+			} break;
+			case Mouse::Event::Type::WheelUp:
+			{
+				angle -= 0.1f;
+			} break;
+			}
+		}
+	}
+	float angle = 0;  // test
 
 public:
 	App()
@@ -36,6 +56,7 @@ public:
 			}
 			// dt
 			//HandleInput(dt);
+			HandleInput();
 			//DoFrame(dt);
 			DoFrame();
 		}
