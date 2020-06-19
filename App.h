@@ -8,11 +8,17 @@ private:
 	Window wnd;
 	void DoFrame()
 	{
+		angle += 0.01f;
 		wnd.Gfx().ClearBuffer(0.5f, 0.5f, 1.0f);
 		wnd.Gfx().DrawTestTriangle(
 			angle,
 			wnd.mouse.GetPosX() / 400.0f - 1.0f,
 			-wnd.mouse.GetPosY() / 300.0f + 1.0f
+			);
+		wnd.Gfx().DrawTestTriangle(
+			-angle,
+			0,
+			0
 			);
 		wnd.Gfx().EndFrame();
 	}
@@ -55,9 +61,7 @@ public:
 				return exitCode;
 			}
 			// dt
-			//HandleInput(dt);
 			HandleInput();
-			//DoFrame(dt);
 			DoFrame();
 		}
 	}
