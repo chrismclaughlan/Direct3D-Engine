@@ -11,6 +11,12 @@
 #define ALEXIS_EXCEPTION(hResult) (Window::Exception(__LINE__, __FILE__, hResult))
 #define ALEXIS_LAST_EXCEPTION() (Window::Exception(__LINE__, __FILE__, GetLastError()))
 
+struct Optional
+{
+	int32 wParam = {};
+	bool quit = false;
+};
+
 class Window
 {
 public:
@@ -47,6 +53,7 @@ public:
 	Window(const Window&) = delete;
 	Window& operator=(const Window&) = delete;
 	void SetTitle(const char* name);
+	static bool ProcessMessages(int32* exitCode) noexcept;
 	Graphics& Gfx();
 private:
 	static LRESULT CALLBACK HandleMsgSetup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) noexcept;

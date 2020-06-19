@@ -64,6 +64,9 @@
     <ClInclude Include="Graphics.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="App.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".md" />

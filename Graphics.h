@@ -12,7 +12,7 @@ public:
 	~Graphics();
 	void EndFrame();
 	void ClearBuffer(float r, float g, float b) noexcept;
-	void DrawTestTriangle(float angle);
+	void DrawTestTriangle(float angle, float x, float y);
 private:
 	ID3D11Device* pDevice = nullptr;
 	IDXGISwapChain* pSwap = nullptr;

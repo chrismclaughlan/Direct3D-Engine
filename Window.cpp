@@ -89,6 +89,26 @@ void Window::SetTitle(const char* name)
 	}
 }
 
+// Returns true if quitting window
+bool Window::ProcessMessages(int32* exitCode) noexcept
+{
+	Optional op;
+	MSG msg = {};
+	while (PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))
+	{
+		if (msg.message == WM_QUIT)
+		{
+			exitCode = (int32*)msg.wParam;
+			return true;
+		}
+
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	return false;
+}
+
 Graphics& Window::Gfx()
 {
 	return *pGraphics;
