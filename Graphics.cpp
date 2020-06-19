@@ -1,7 +1,11 @@
+#include "common_types.h"
 #include "Graphics.h"
 #include <wrl/client.h>
+#include <d3dcompiler.h>
+#include <array>
 
 #pragma comment(lib, "D3D11.lib")
+#pragma comment(lib, "D3DCompiler.lib")
 
 namespace wrl = Microsoft::WRL;
 
@@ -41,10 +45,10 @@ Graphics::Graphics(HWND hwnd)
 
 Graphics::~Graphics()
 {
-	if (pTarget != nullptr)
-	{
-		pTarget->Release();
-	}
+	//if (pTarget.GetAddressOf() != nullptr)
+	//{
+	//	pTarget.Get()->Release();
+	//}
 	if (pContext != nullptr)
 	{
 		pContext->Release();
@@ -67,7 +71,7 @@ void Graphics::EndFrame()
 void Graphics::ClearBuffer(float r, float g, float b) noexcept
 {
 	const float colour[] = { r,  g, b, 1.0f };
-	pContext->ClearRenderTargetView(pTarget, colour);
+	pContext->ClearRenderTargetView(pTarget.Get(), colour);
 }
 
 void Graphics::DrawTestTriangle()
@@ -76,14 +80,18 @@ void Graphics::DrawTestTriangle()
 	{
 		float x;
 		float y;
+		uint8 r;
+		uint8 g;
+		uint8 b;
+		uint8 a;
 	};
 
 	// Create triangle
 	const Vertex vertices[] =
 	{
-		{0.0f, 0.5f},
-		{0.5f, -0.5f},
-		{-0.5f, -0.5f},
+		{0.0f, 0.5f, 255, 0, 0, 255},
+		{0.5f, -0.5f, 0, 255, 0, 255},
+		{-0.5f, -0.5f, 0, 0, 255, 255},
 	};
 
 	wrl::ComPtr<ID3D11Buffer> pVertexBuffer;
@@ -104,12 +112,85 @@ void Graphics::DrawTestTriangle()
 	// Bind vertex buffer to pipeline
 	const UINT stride = sizeof(Vertex);
 	const UINT offset = 0u;
-	pContext->IASetVertexBuffers(0u, 1u, &pVertexBuffer, &stride, &offset);
+	pContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
+
+	wrl::ComPtr<ID3DBlob> pBlob;
+
+	// Create pixel shader
+	wrl::ComPtr<ID3D11PixelShader> pPixelShader;
+	// TODO error handling
+	/*
+	https://www.youtube.com/watch?v=KR8bP0G07fc
+	03:00
+	*/
+	D3DReadFileToBlob(L"PixelShader.cso", &pBlob);
+	pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pPixelShader);
+
+	// Bind pixel shader
+	pContext->PSSetShader(pPixelShader.Get(), nullptr, 0u);
+
+	// Create Vertex shader
+	wrl::ComPtr<ID3D11VertexShader> pVertexShader;
+	//D3DReadFileToBlob(L"VertexShader.cso", &pBlob);
+
+	// TODO error handling
+	/*
+	https://www.youtube.com/watch?v=pfbWt1BnPIo
+	27:00
+	*/
+	D3DReadFileToBlob(L"VertexShader.cso", &pBlob);
+	pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &pVertexShader);
+
+	// Bind vertex shader
+	pContext->VSSetShader(pVertexShader.Get(), nullptr, 0u);
+
+
+	// input ...
+	wrl::ComPtr<ID3D11InputLayout> pInputLayout;
+	const D3D11_INPUT_ELEMENT_DESC ied[] =
+	{
+		{"Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0,
+		D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"Colour", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT,
+		D3D11_INPUT_PER_VERTEX_DATA, 0},
+	};
+
+	// TODO error handling
+	/*
+	https://www.youtube.com/watch?v=KR8bP0G07fc
+	20:00
+	*/
+
+	pDevice->CreateInputLayout(
+		ied, (UINT)std::size(ied),
+		pBlob->GetBufferPointer(), pBlob->GetBufferSize(),
+		&pInputLayout
+		);
+
+	pContext->IASetInputLayout(pInputLayout.Get());
 	
+	// Bind render target
+	pContext->OMSetRenderTargets(1u, pTarget.GetAddressOf(), nullptr);  // pTarget.GetAddressOf()
+
+	// Set primitive topology
+	pContext->IASetPrimitiveTopology(
+		D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// Configure viewport
+	D3D11_VIEWPORT vp;
+	vp.Width = 800;
+	vp.Height = 600;
+	vp.MinDepth = 0;
+	vp.MaxDepth = 1;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	pContext->RSSetViewports(1u, &vp);
+
 	// TODO error handling
 	/*
 	https://www.youtube.com/watch?v=pfbWt1BnPIo
 	18:00
 	*/
-	pContext->Draw(3u, 0u);
+
+	pContext->Draw((UINT)std::size(vertices), 0u);
 }

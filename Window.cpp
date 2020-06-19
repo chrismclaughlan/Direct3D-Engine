@@ -82,12 +82,11 @@ Window::~Window()
 
 void Window::SetTitle(const char* name)
 {
-	wchar_t* title = charToWchar(name);
-	if (SetWindowText(hwnd, title) == NULL)
+	const std::wstring title = CharToWString(name);
+	if (SetWindowText(hwnd, title.c_str()) == NULL)
 	{
 		throw ALEXIS_LAST_EXCEPTION();
 	}
-	delete[] title;
 }
 
 Graphics& Window::Gfx()

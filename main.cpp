@@ -13,7 +13,7 @@ int32 CALLBACK WinMain(
 {
 	try
 	{
-		Window window(940, 540, L"Alexis Engine: Direct3D");
+		Window window(800, 600, L"Alexis Engine: Direct3D");
 
 		MSG msg;
 		BOOL gResult;
@@ -72,17 +72,14 @@ int32 CALLBACK WinMain(
 	}
 	catch (const AlexisException& e)
 	{
-		wchar_t* wstrWhat = charToWchar(e.what());
-		wchar_t* wstrGetType = charToWchar(e.GetType());
-		MessageBox(nullptr, wstrWhat, wstrGetType, MB_OK | MB_ICONEXCLAMATION);
-		delete[] wstrGetType;
-		delete[] wstrWhat;
+		const std::wstring what = CharToWString(e.what());
+		const std::wstring type = CharToWString(e.GetType());
+		MessageBox(nullptr, what.c_str(), type.c_str(), MB_OK | MB_ICONEXCLAMATION);
 	}
 	catch (const std::exception& e)
 	{
-		wchar_t* wstrWhat = charToWchar(e.what());
-		MessageBox(nullptr, wstrWhat, L"Standard Exception", MB_OK | MB_ICONEXCLAMATION);
-		delete[] wstrWhat;
+		const std::wstring what = CharToWString(e.what());
+		MessageBox(nullptr, what.c_str(), L"Standard Exception", MB_OK | MB_ICONEXCLAMATION);
 	}
 	catch (...)
 	{

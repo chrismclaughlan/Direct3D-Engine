@@ -1,6 +1,7 @@
 #pragma once
 #include "common_windows.h"
 #include <D3D11.h>
+#include <wrl/client.h>
 
 class Graphics
 {
@@ -16,5 +17,5 @@ private:
 	ID3D11Device* pDevice = nullptr;
 	IDXGISwapChain* pSwap = nullptr;
 	ID3D11DeviceContext* pContext = nullptr;
-	ID3D11RenderTargetView* pTarget = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> pTarget = nullptr;
 };
